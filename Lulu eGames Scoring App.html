@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Lulu eGames Scoring App</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      li {
+        padding-top: 5px;
+      }
+      #drop_zone {
+        border: 2px dashed #bbb;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+        font: bold italic 20pt;
+        color: #bbb;
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+    <h2 style="text-align:center"><i>Super Duper Lulu eGames Scoring App!</i></h2>
+    <div id="drop_zone">Drop CSV eGames scoring file here...</div>
+    <div id="results">
+      <h3>Results</h3>
+      <h4>Aggregate Data</h4>
+        <ul>
+          <li> File: <span id="fileName"></span> </li>
+          <li> Rows: <span id="numRows"></span> </li>
+          <li> Columns: <span id="numCols"></span> </li>
+          <li> Number of teams found: <span id="numTeams"></span> </li>
+          <li> Number of questions found: <span id="numQ"></span> </li>
+          <li> Number of score sets analyzed: <span id="numScoreSets"></span> </li>
+        </ul>
+      <h4>Team Results (in rank order)</h4>
+        <ul id="teamList">
+        </ul>
+    </div>
+
+    <script>
+
+      function processData(data) {
+        var numRows = data.length;
+        var numCols = data[0].length;
+        var firstQ, lastQ, numQ, nameCol;
+        var r, c;
+        var results = [];
+
+        // last row might be blank
+        if (data[numRows-1].length != data[0])
+          numRows -= 1;
+
+        $("#numRows").text(numRows);
+        $("#numCols").text(numCols);
+
+        // analyze the data to find the needed indices
+
+        // Find the column with the judges' names
+        for (var c = 0; c < data[0].length; c++) {
+          if (/^Please provide your first and last name/.test(data[1][c])) {
+            nameCol = c;
+            break;
+          }
+        }
+
+        // The first question starts with a Q in row 0
+        for (var c = nameCol + 1; c < data[0].length; c++) {
+          if (/^Q/.test(data[0][c])) {
+            firstQ = c;
+            break;
+          }
+        }
+
+        // The last question has the feedback question in row 1
+        for (var c = firstQ + 1; c < data[0].length; c++) {
+          if (/^Please provide detailed feedback/.test(data[1][c])) {
+            lastQ = c;
+            break;
+          }
+        }
+
+        numQ = lastQ - firstQ + 1;
+        $("#numQ").text(numQ);
+
+
+        var n = 0;
+        var startQ = firstQ;
+        const scoreVal = {Poor: 1, Fair: 2, Average: 3, Good: 4, Excellent: 5};
+
+        while (startQ < data[0].length - numQ) {
+          var team = data[1][startQ].split("\n")[0].trim();
+          results.push({team: team, scores: [], feedback: []});
+          // get each judge's scores
+          for (var r = 3; r < numRows; r++) {
+            var points = 0;
+            var q;
+            // across all questions
+            for (q = 0; q < numQ-1; q++) {
+              var c = startQ + q; // column of question
+              var score = data[r][c];
+              if (score == "")
+                break;  // incomplete score set
+              points += scoreVal[score];
+            }
+            // pick up the judge's feedback
+            var feedback = data[r][startQ+numQ-1].trim();
+            if (feedback.length != 0)
+              results[n].feedback.push(feedback);
+            if (q < numQ-1)
+              continue; // ignore incomplete score set
+            results[n].scores.push(points/numQ);
+          }
+          results[n].avgScore = results[n].scores
+            .reduce(function(x,y){return x+y})/results[n].scores.length;
+          startQ += numQ;
+          n++;
+        }
+
+        $("#numTeams").text(n);
+
+        $("#numScoreSets").text(numRows - 3);
+
+        // sort the teams by score - high to low
+        results.sort(function(a,b){return b.avgScore - a.avgScore});
+
+        // populate the individual team results
+        var computePlace = function(n) {
+          switch (n) {
+              case 0:
+                return " (1st place)";
+              case 1:
+                return " (2nd place)";
+              case 2:
+                return " (3rd place)";
+              default:
+                return "";
+          }
+        }
+
+        for (var i=0; i < results.length; i++) {
+          var team = results[i];
+          var html = "<li><b>" + team.team + "</b><ul>" +
+            "<li><b>Overall Average Score: " + team.avgScore.toFixed(3) +
+            computePlace(i) + "</b></li>" +
+            "<li>Individual Judge's Scores (" + team.scores.length + " total): " +
+            team.scores.map(function(a){return a.toFixed(3)}).join(", ") + "</li>";
+          // put feedback here
+          html += "<li>Judges' feedback:<ul>";
+          for (var j=0; j < team.feedback.length; j++) {
+            html += "<li style='white-space:pre-wrap'>" + team.feedback[j] + "</li>";
+          }
+          html += "</ul>";
+          html += "</li>";
+          $("#teamList").append(html);
+        }
+      }
+
+      //////////////////////
+
+      function handleFileSelect(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+
+        var file = evt.dataTransfer.files[0]; // First FileList object
+
+        // clear out the old results
+        $("#numRows").text("");
+        $("#numCols").text("");
+        $("#numTeams").text("");
+        $("#numQ").text("");
+        $("#numScoreSets").text("");
+        $("#teamList").html("");
+
+        $("#fileName").text(file.name);
+
+        if (!/\.csv$/i.test(file.name)) {
+          alert("Please give me a CSV file!");
+          return;
+        }
+
+        Papa.parse(file, {
+          complete: function(results) {
+            if (results.errors.length != 0) {
+              alert("I was not able to parse this file. Are you sure it's CSV?");
+            } else {
+              processData(results.data);
+            }
+          }
+        });
+      }
+
+      //////////////////////
+
+      function handleDragOver(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+      }
+
+      // Setup the dnd listeners.
+
+      var dropZone = document.getElementById('drop_zone');
+      dropZone.addEventListener('dragover', handleDragOver, false);
+      dropZone.addEventListener('drop', handleFileSelect, false);
+
+    </script>
+  </body>
+</html>
