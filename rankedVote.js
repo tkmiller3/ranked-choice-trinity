@@ -147,7 +147,7 @@ function processData(data) {
         let winner = "";
         for (let candidate in totalVotes) {
             let votes = totalVotes[candidate];
-            let pct = Math.round(votes / totalVotesCounted * 10) * 10; // nearest 10th
+            let pct = Math.round(votes / totalVotesCounted * 1000) / 10; // nearest 10th
             if (votes / totalVotesCounted > .5) {
                 winner = candidate; // majority achieved
             }
