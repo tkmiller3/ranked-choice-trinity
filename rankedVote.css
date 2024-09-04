@@ -33,6 +33,7 @@ body {
   }
   .p-node {
     font-style: italic;
+    margin: .25pc;
   }
   .h3-node {
     text-align: left;
