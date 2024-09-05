@@ -21,15 +21,14 @@ var votingDone;         // set to true when a majority is achieved
 function processData(data) {
     let numRows = data.length;
     let numCols = data[0].length;
-    let ballotCol, houseCol;
-    let ballotArray = [],
+    let ballotCols = [],
+        ballotArray = [],
         houseArray = [];
 
     // clear out old stuff
     votingRound = 1;
     totalVotes = {}
     totalVotesCounted = 0;
-    const houses = ["Baxter", "Craig", "McLennen", "Urquhart"];
     votesByHouse = {
         Baxter: {},
         Craig: {},
@@ -170,16 +169,23 @@ function processData(data) {
 
     // analyze the data to find the needed indices
 
-    // Find the column with the ;-separated ballots
-    for (let c = 0; c < data[0].length; c++) {
-        if (/^Rank your choices by preference/.test(data[0][c])) {
-            ballotCol = c;
-            break;
+    ballotCols = [null, null, null];
+
+    // Find the columns with the first, second and third choice selections
+    for (let c = 0; c < numCols; c++) {
+        let colHeader = data[0][c]
+        if (/first choice/i.test(colHeader)) {
+            ballotCols[0] = c;
+        } else if (/second choice/i.test(colHeader)) {
+            ballotCols[1] = c;
+        } else if (/third choice/i.test(colHeader)) {
+            ballotCols[2] = c;
         }
     }
+    console.log(ballotCols)
 
     // Find the column with the voter's House
-    for (let c = 0; c < data[0].length; c++) {
+    for (let c = 0; c < numCols; c++) {
         if (/^What house are you in\?/.test(data[0][c])) {
             houseCol = c;
             break;
@@ -187,7 +193,19 @@ function processData(data) {
     }
 
     // Add the candidates to totalVotes votesByHouse and initialize
-    let candidates = mkRankList(data[1][ballotCol]);
+    // Search the choice columns to find all candidate names
+    let candidates = [];
+    let candidate;
+    for (let r = 1; r < numRows; r++) {
+        for (c in ballotCols) {
+            candidate = data[r][ballotCols[c]]
+            if (candidate == '') continue;
+            if (!candidates.includes(candidate)) {
+                candidates.push(candidate)
+            }
+        }
+    }
+
     for (let i in houses) {
         let house = houses[i];
         for (let j in candidates) {
@@ -202,7 +220,14 @@ function processData(data) {
     ballotArray = [];
     for (let r = 1; r < numRows; r++) {
         houseArray.push(data[r][houseCol]);
-        ballotArray.push(mkRankList(data[r][ballotCol]));
+        let ballot = [];
+        for (c in ballotCols) {
+            let candidate = data[r][ballotCols[c]];
+            if (candidate != '') {
+                ballot.push(candidate);
+            }
+        }
+        ballotArray.push(ballot);
     }
 
 
@@ -235,7 +260,7 @@ $(function () {
             alert("Please give me a CSV file!");
             return;
         }
-        
+
         $(dropZone).hide()
 
         Papa.parse(file, {
@@ -245,6 +270,12 @@ $(function () {
                         "I was not able to parse this file. Are you sure it's CSV?"
                     );
                 } else {
+                    // clean the data
+                    let data = results.data;
+                    let numRows = data.length;
+                    if (data[data.length-1].length == 1) {
+                        data.pop();
+                    }
                     processData(results.data);
                 }
             },

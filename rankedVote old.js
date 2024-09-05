@@ -21,8 +21,8 @@ var votingDone;         // set to true when a majority is achieved
 function processData(data) {
     let numRows = data.length;
     let numCols = data[0].length;
-    let ballotCols = [],
-        ballotArray = [],
+    let ballotCol, houseCol;
+    let ballotArray = [],
         houseArray = [];
 
     // clear out old stuff
@@ -170,23 +170,16 @@ function processData(data) {
 
     // analyze the data to find the needed indices
 
-    ballotCols = [null, null, null];
-
-    // Find the columns with the first, second and third choice selections
-    for (let c = 0; c < numCols; c++) {
-        let colHeader = data[0][c]
-        if (/first choice/i.test(colHeader)) {
-            ballotCols[0] = c;
-        } else if (/second choice/i.test(colHeader)) {
-            ballotCols[1] = c;
-        } else if (/third choice/i.test(colHeader)) {
-            ballotCols[2] = c;
+    // Find the column with the ;-separated ballots
+    for (let c = 0; c < data[0].length; c++) {
+        if (/^Rank your choices by preference/.test(data[0][c])) {
+            ballotCol = c;
+            break;
         }
     }
-    console.log(ballotCols)
 
     // Find the column with the voter's House
-    for (let c = 0; c < numCols; c++) {
+    for (let c = 0; c < data[0].length; c++) {
         if (/^What house are you in\?/.test(data[0][c])) {
             houseCol = c;
             break;
@@ -194,18 +187,7 @@ function processData(data) {
     }
 
     // Add the candidates to totalVotes votesByHouse and initialize
-    // Search the choice columns to find all candidate names
-    let candidates = [];
-    let candidate;
-    for (let r = 1; r < numRows; r++) {
-        for (c in ballotCols) {
-            candidate = data[r][ballotCols[c]]
-            if (!candidates.includes(candidate)) {
-                candidates.push(candidate)
-            }
-        }
-    }
-
+    let candidates = mkRankList(data[1][ballotCol]);
     for (let i in houses) {
         let house = houses[i];
         for (let j in candidates) {
@@ -220,11 +202,7 @@ function processData(data) {
     ballotArray = [];
     for (let r = 1; r < numRows; r++) {
         houseArray.push(data[r][houseCol]);
-        let ballot = [];
-        for (c in ballotCols) {
-            ballot.push(data[r][ballotCols[c]]);
-        }
-        ballotArray.push(ballot);
+        ballotArray.push(mkRankList(data[r][ballotCol]));
     }
 
 
