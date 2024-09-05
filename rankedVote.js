@@ -72,16 +72,16 @@ function processData(data) {
         if (lowCandidates.length > 1) {
             mkNode("p", infoDiv).text(`There was a ${lowCandidates.length}-way tie for last place.`)
             last = lowCandidates[Math.floor(Math.random() * lowCandidates.length)]
-            mkNode("p", infoDiv).text(`Randomly dropping candidate ${last}.`)
+            mkNode("p", infoDiv).text(`Candidate ${last} drew the short straw.`)
         } else {
             last = lowCandidates[0];
-            mkNode("p", infoDiv).text(`Dropping candidate ${last}.`)
+            mkNode("p", infoDiv).text(`Dropping last place candidate ${last}.`)
         }
         // remove last candidate from ballots
         for (let i in ballotArray) {
             let ballot = ballotArray[i];
-            let index = ballot.indexOf(last);
-            if (index > -1) {
+            let index;
+            while ((index = ballot.indexOf(last)) > -1) {
                 ballot.splice(index, 1);
             }
         }
