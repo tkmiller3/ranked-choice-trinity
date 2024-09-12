@@ -1,21 +1,57 @@
 body {
     font-family: sans-serif;
+    font-size: 300%;
+    background-color: #c0a572;
+    margin: 0;
+  }
+button {
+  cursor: pointer;
+  padding: 0.25pc;
+  margin: 0.25pc;
+}
+button.round-btn {
+  display:none;
+}
+  #input-info {
+    display: none;
+  }
+  #fixed-header {
+    position: sticky;
+    top: 0;
+  }
+  #banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    color: white;
+    background-color: black;
+    padding: 2px;
+  }
+  #banner-title {
+    font-family: Lora, sans-serif;
+    padding: 2px;
   }
   li {
     padding-top: 5px;
   }
   #drop_zone {
-    border: 2px dashed #bbb;
+    border: 2px dashed;
+    margin: 1pc;
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     border-radius: 10px;
-    padding: 25px;
+    padding: 5pc;
     text-align: center;
-    font: bold italic 20pt;
-    color: #bbb;
+    font-style: italic;
+    font-weight: bold;
+  }
+  .round-header {
+    display: flex;
+    align-items: center;
   }
   #table-container {
     text-align: center;
+    margin: 1pc;
   }
   #tabulate {   /* tabulate button */
     margin: 1pc;
@@ -29,11 +65,12 @@ body {
     border: 1px solid;
   }
   .th-node {
-    padding: .25pc
+    padding: 0 .5pc 0; /* top | left and right | bottom */
   }
   .p-node {
     font-style: italic;
     margin: .25pc;
+    font-size: 80%;
   }
   .h3-node {
     text-align: left;

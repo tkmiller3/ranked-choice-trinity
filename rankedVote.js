@@ -36,6 +36,7 @@ function processData(data) {
         Urquhart: {},
     };
     $("#table-container").empty();
+    
 
     // utility to parse the ;-separated rankings
     function mkRankList(rankStr) {
@@ -116,6 +117,7 @@ function processData(data) {
                 totalVotesCounted++;
             }
         }
+        $("#input-info").hide();
         showResults();
     }
 
@@ -123,8 +125,24 @@ function processData(data) {
     function showResults() {
         // Populate results
         let table_container = $("#table-container");
-        mkNode("h3", table_container).text(`Round ${votingRound}`);
-        let table = mkNode("table", table_container)
+        let round_header = mkNode("div", table_container)
+            .addClass("round-header");
+        mkNode("span", round_header)
+            .text(`Round ${votingRound}`);
+        let round_container = mkNode("div", table_container)
+        .addClass("round-container")
+        .attr("data-round", votingRound);
+        mkNode("button", round_header).text('show')
+            .addClass("round-btn")
+            .attr("data-round", votingRound)
+            .click(function () {
+                let round = Number(this.dataset.round);
+                $(".round-container").hide();
+                $(`.round-container[data-round=${round}]`).show();
+                $(".round-btn").show();
+                $(`.round-btn[data-round=${round}]`).hide();
+            })
+        let table = mkNode("table", round_container)
         let tr;
         // make the header row
         tr = mkNode("tr", table);
@@ -152,7 +170,7 @@ function processData(data) {
             }
             mkNode("td", tr).text(`${votes} (${pct}%)`);
         }
-        infoDiv = mkNode("div", table_container);
+        infoDiv = mkNode("div", round_container);
         let info = mkNode("p", infoDiv);
         if (winner == "") {
             info.text("No candidate received a majority.");
@@ -233,6 +251,8 @@ function processData(data) {
 
     if (firstTime) {
         $("#tabulate").click(function () {
+            $(".round-btn").show();
+            $(".round-container").hide();
             tabulateVotes();
             $("#tabulate").text("Next Round");
             if (!votingDone) {
@@ -249,6 +269,9 @@ $(function () {
         evt.preventDefault();
 
         let file = evt.dataTransfer.files[0]; // First FileList object
+
+        // show # ballots loaded
+        $("#input-info").show();
 
         // clear out the old results
         $("#numRows").text("");
@@ -288,11 +311,26 @@ $(function () {
         evt.stopPropagation();
         evt.preventDefault();
         evt.dataTransfer.dropEffect = "copy"; // Explicitly show this is a copy.
+        evt.target.style.borderWidth="4px";
+    }
+
+    function handleDragLeave(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.target.style.borderWidth="2px";
     }
 
     // Setup the dnd listeners.
 
     let dropZone = document.getElementById("drop_zone");
     dropZone.addEventListener("dragover", handleDragOver, false);
+    dropZone.addEventListener("dragleave", handleDragLeave, false);
     dropZone.addEventListener("drop", handleFileSelect, false);
+
+    // set the title from query params
+    let searchParams = new URLSearchParams(window.location.search);
+    let title = searchParams.get("title");
+    if (title) {
+        $("#banner-title").text(title);
+    }
 });

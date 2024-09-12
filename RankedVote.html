@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Trinity Ranked Voting</title>
+    <title>Trinity Ranked Choice Voting</title>
+    <link rel="icon" href="https://trinityacademy.com/wp-content/uploads/2024/06/cropped-TA-Logo_V_PMS-192x192.png" sizes="192x192" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
     <link href="file:rankedVote.css" rel="stylesheet"></link>
@@ -9,15 +13,15 @@
   </head>
 
   <body>
-    <h2 style="text-align: center">
-      <i>Trinity House Point Bonus Voting</i>
-    </h2>
+    <div id="fixed-header">
+      <div id="banner">
+        <img src="file:trinity-banner.png"></img>
+        <span id="banner-title">Ranked Choice Voting</span>
+      </div>
+    </div>
     <div id="drop_zone">Drop CSV ballots file here...</div>
     <div id="input-info">
-      <ul>
-        <li>File: <span id="fileName"></span></li>
-        <li>Ballots loaded: <span id="numBallots"></span></li>
-      </ul>
+      <p><span id="numBallots"></span> ballots loaded...</p>
     </div>
     <div style="text-align: center" id="results-container">
       <h3 id="results-header"></h3>
