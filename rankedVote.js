@@ -38,11 +38,6 @@ function processData(data) {
     $("#table-container").empty();
     
 
-    // utility to parse the ;-separated rankings
-    function mkRankList(rankStr) {
-        return rankStr.replace(/;$/, "").split(";");
-    }
-
     // utility for building table nodes
     function mkNode(type, parent) {
         return $(`<${type}><${type}`).appendTo(parent).addClass(`${type}-node`);
@@ -134,6 +129,7 @@ function processData(data) {
         .attr("data-round", votingRound);
         mkNode("button", round_header).text('show')
             .addClass("round-btn")
+            .addClass("button-14")
             .attr("data-round", votingRound)
             .click(function () {
                 let round = Number(this.dataset.round);
@@ -152,7 +148,7 @@ function processData(data) {
         }
         // add the house vote tallies
         for (let house in votesByHouse) {
-            tr = mkNode("tr", table);
+            tr = mkNode("tr", table).addClass("house-row");
             mkNode("th", tr).text(house);
             for (let candidate in votesByHouse[house]) {
                 mkNode("td", tr).text(votesByHouse[house][candidate]);
@@ -160,7 +156,13 @@ function processData(data) {
         }
         // add the total votes
         tr = mkNode("tr", table);
-        mkNode("th", tr).text("Total");
+        mkNode("th", tr).text("Total").css("cursor", "pointer").on("click", function(evt) {
+            if ($(".house-row").css("display") == 'none') {
+                $(".house-row").show(500);
+            } else {
+                $(".house-row").hide(500);
+            }
+        });
         let winner = "";
         for (let candidate in totalVotes) {
             let votes = totalVotes[candidate];
@@ -295,7 +297,6 @@ $(function () {
                 } else {
                     // clean the data
                     let data = results.data;
-                    let numRows = data.length;
                     if (data[data.length-1].length == 1) {
                         data.pop();
                     }
