@@ -9,13 +9,14 @@ var votesByHouse = {    // stores votes by house
     McLennen: {},
     Urquhart: {},
 };
-var data;               // the parsed CSV file
-var firstTime = true;   // to prevent stacking event handlers
+var data;                       // the parsed CSV file
+var firstTime = true;           // to prevent stacking event handlers
 var votingRound = 1;
-var totalVotes;         // object to hold total votes per candidate
-var totalVotesCounted;  // for calculating percentage and majority
-var infoDiv;             // unordered list for tabulation results
-var votingDone;         // set to true when a majority is achieved
+var totalVotes;                 // object to hold total votes per candidate
+var totalVotesCounted;          // for calculating percentage and majority
+var infoDiv;                    // unordered list for tabulation results
+var votingDone;                 // set to true when a majority is achieved
+var showHouseDetail = false;    // show vote tally by house
 
 // main processing function
 function processData(data) {
@@ -38,9 +39,9 @@ function processData(data) {
     $("#table-container").empty();
     
 
-    // utility for building table nodes
+    // utility for creating DOM nodes
     function mkNode(type, parent) {
-        return $(`<${type}><${type}`).appendTo(parent).addClass(`${type}-node`);
+        return $(`<${type}></${type}>`).appendTo(parent).addClass(`${type}-node`);
     }
 
     // Determine the lowest vote count in totalVotes
@@ -157,7 +158,8 @@ function processData(data) {
         // add the total votes
         tr = mkNode("tr", table);
         mkNode("th", tr).text("Total").css("cursor", "pointer").on("click", function(evt) {
-            if ($(".house-row").css("display") == 'none') {
+            showHouseDetail = !showHouseDetail;     // toggle
+            if (showHouseDetail) {
                 $(".house-row").show(500);
             } else {
                 $(".house-row").hide(500);
@@ -181,6 +183,9 @@ function processData(data) {
             info.text(`Candidate ${winner} wins the election with a majority of votes!`);
             votingDone = true;
             $("#tabulate").hide();
+        }
+        if (showHouseDetail) {
+            $(".house-row").show(500);
         }
     }
 
