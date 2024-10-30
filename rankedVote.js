@@ -22,6 +22,7 @@ var showHouseDetail = false;    // show vote tally by house
 function processData(data) {
     let numRows = data.length;
     let numCols = data[0].length;
+    let houseCol = null;
     let ballotCols = [],
         ballotArray = [],
         houseArray = [];
@@ -108,7 +109,9 @@ function processData(data) {
             let house = houseArray[i];
             if (ballot.length > 0) {
                 let choice1 = ballot[0];
-                votesByHouse[house][choice1] += 1;
+                if (house != null) {
+                    votesByHouse[house][choice1] += 1;
+                }
                 totalVotes[choice1] += 1;
                 totalVotesCounted++;
             }
@@ -147,12 +150,14 @@ function processData(data) {
         for (let candidate in totalVotes) {
             mkNode("th", tr).text(candidate);
         }
-        // add the house vote tallies
-        for (let house in votesByHouse) {
-            tr = mkNode("tr", table).addClass("house-row");
-            mkNode("th", tr).text(house);
-            for (let candidate in votesByHouse[house]) {
-                mkNode("td", tr).text(votesByHouse[house][candidate]);
+        // add the house vote tallies if applicable
+        if (houseCol != null) {
+            for (let house in votesByHouse) {
+                tr = mkNode("tr", table).addClass("house-row");
+                mkNode("th", tr).text(house);
+                for (let candidate in votesByHouse[house]) {
+                    mkNode("td", tr).text(votesByHouse[house][candidate]);
+                }
             }
         }
         // add the total votes
@@ -211,7 +216,7 @@ function processData(data) {
 
     // Find the column with the voter's House
     for (let c = 0; c < numCols; c++) {
-        if (/^What house are you in\?/.test(data[0][c])) {
+        if (/what house are you in/i.test(data[0][c])) {
             houseCol = c;
             break;
         }
@@ -244,7 +249,9 @@ function processData(data) {
     houseArray = [];
     ballotArray = [];
     for (let r = 1; r < numRows; r++) {
-        houseArray.push(data[r][houseCol]);
+        if (houseCol != null) {
+           houseArray.push(data[r][houseCol]);
+        }
         let ballot = [];
         for (c in ballotCols) {
             let candidate = data[r][ballotCols[c]];
